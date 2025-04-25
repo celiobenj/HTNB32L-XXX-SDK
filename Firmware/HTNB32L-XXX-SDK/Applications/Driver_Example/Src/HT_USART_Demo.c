@@ -48,7 +48,7 @@ void HT_USART_App(void) {
         while(!rx_callback);
         rx_callback = 0;
         
-        ht_printf("Received: %s\n, ", (char *)rx_buffer);
+        ht_printf("Received: %s\n", (char *)rx_buffer);
 
         memset(rx_buffer, 0, sizeof(rx_buffer));
 
