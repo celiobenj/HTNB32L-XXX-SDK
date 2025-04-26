@@ -78,9 +78,9 @@ static void HT_GPIO_InitButton(void) {
 
   HT_GPIO_Init(&GPIO_InitStruct);
 
-  // Enable IRQ
-  HT_XIC_SetVector(PXIC_Gpio_IRQn, HT_GPIO_Callback);
-  HT_XIC_EnableIRQ(PXIC_Gpio_IRQn);
+  // // Enable IRQ
+  // HT_XIC_SetVector(PXIC_Gpio_IRQn, HT_GPIO_Callback);
+  // HT_XIC_EnableIRQ(PXIC_Gpio_IRQn);
 }
 
 static void HT_GPIO_InitLed(void) {
@@ -109,11 +109,17 @@ void HT_GPIO_App(void) {
 
   while(1) {
 
-      if (gpio_exti)
+      if (GPIO_PinRead(BUTTON_INSTANCE, BUTTON_PIN))
+      {
         HT_GPIO_WritePin(LED_GPIO_PIN, LED_INSTANCE, LED_ON);
+        ht_printf("Led OFF!\n");
+      }
       else
+      {
+
         HT_GPIO_WritePin(LED_GPIO_PIN, LED_INSTANCE, LED_OFF);
-      
+        ht_printf("Led ON!\n");
+      }
   }
 }
 
