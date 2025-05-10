@@ -4,6 +4,7 @@
     "cortex-debug.gdbPath": "C:/gcc_arm/bin/arm-none-eabi-gdb",
     "C_Cpp.errorSquiggles": "enabled",
     "files.associations": {
+        ".gitignore": "git-commit",
         "*.inc": "bitbake",
         "*.rmd": "markdown",
         "cmsis_gcc.h": "c",
@@ -37,7 +38,11 @@
         "ht_uart_api.h": "c",
         "ht_timer_demo.h": "c",
         "ht_usart_unilog.h": "c",
-        "*.conf": "bitbake"
+        "*.conf": "bitbake",
+        "ht_gpio_demo.h": "c",
+        "task.h": "c",
+        "slpman_qcx212.h": "c",
+        "freertos.h": "c"
     },
     "python.autoComplete.extraPaths": [
         "${workspaceFolder}/sources/poky/bitbake/lib",
