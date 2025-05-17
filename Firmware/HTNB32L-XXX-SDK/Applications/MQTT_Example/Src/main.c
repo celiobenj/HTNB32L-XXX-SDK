@@ -16,25 +16,41 @@
 #include "main.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
+
+QueueHandle_t xFila;
 
 static uint32_t uart_cntrl = (ARM_USART_MODE_ASYNCHRONOUS | ARM_USART_DATA_BITS_8 | ARM_USART_PARITY_NONE | 
                                 ARM_USART_STOP_BITS_1 | ARM_USART_FLOW_CONTROL_NONE);
 
 extern USART_HandleTypeDef huart1;
 
-volatile bool button_state = false;
-
 void Task1(void *pvParameters) {
+    bool last_button_state = true;
     while (1) {
-        button_state = (bool) GPIO_PinRead(BLUE_BUTTON_INSTANCE, BLUE_BUTTON_PIN);
-        vTaskDelay(10);
-    }
+        bool button_state = (bool) GPIO_PinRead(BLUE_BUTTON_INSTANCE, BLUE_BUTTON_PIN);
+        if (button_state != last_button_state)
+        {
+            if (!button_state)
+            {
+                xQueueSend(xFila, &button_state, portMAX_DELAY);
+            }
+            last_button_state = button_state;
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }  
 }
 
 void Task2(void *pvParameters) {
+    bool recieved;
     while (1) {
-        HT_GPIO_WritePin(BLUE_LED_PIN, BLUE_LED_INSTANCE, button_state);
-        vTaskDelay(10);
+        if (xQueueReceive(xFila, &recieved, portMAX_DELAY))
+        {
+            HT_GPIO_WritePin(BLUE_LED_PIN, BLUE_LED_INSTANCE, LED_OFF);
+            vTaskDelay(pdMS_TO_TICKS(500));
+            HT_GPIO_WritePin(BLUE_LED_PIN, BLUE_LED_INSTANCE, LED_ON);
+            vTaskDelay(pdMS_TO_TICKS(500));
+        }
     }
 }
 
@@ -45,12 +61,21 @@ void Task2(void *pvParameters) {
 */
 void main_entry(void) {
     HAL_USART_InitPrint(&huart1, GPR_UART1ClkSel_26M, uart_cntrl, 115200);
+    
+    xFila = xQueueCreate(10, sizeof(bool));
+
+    if (xFila == NULL)
+    {
+        printf("Erro ao criar fila\n");
+        while(1);
+    }
+
     printf("Exemplo FreeRTOS\n");
 
     HT_GPIO_ButtonInit();
     HT_GPIO_LedInit();
 
-    xTaskCreate(Task1, "Button", 128, NULL, 2, NULL);
+    xTaskCreate(Task1, "Button", 128, NULL, 1, NULL);
     xTaskCreate(Task2, "LED", 128, NULL, 1, NULL);
 
     vTaskStartScheduler();
