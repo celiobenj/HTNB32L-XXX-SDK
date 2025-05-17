@@ -16,9 +16,11 @@
 #include "main.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "queue.h"
+// #include "queue.h"
+#include "semphr.h"
 
-QueueHandle_t xFila;
+// QueueHandle_t xFila;
+SemaphoreHandle_t xSemaforo;
 
 static uint32_t uart_cntrl = (ARM_USART_MODE_ASYNCHRONOUS | ARM_USART_DATA_BITS_8 | ARM_USART_PARITY_NONE | 
                                 ARM_USART_STOP_BITS_1 | ARM_USART_FLOW_CONTROL_NONE);
@@ -33,7 +35,7 @@ void Task1(void *pvParameters) {
         {
             if (!button_state)
             {
-                xQueueSend(xFila, &button_state, portMAX_DELAY);
+                xSemaphoreGive(xSemaforo);
             }
             last_button_state = button_state;
         }
@@ -42,9 +44,8 @@ void Task1(void *pvParameters) {
 }
 
 void Task2(void *pvParameters) {
-    bool recieved;
     while (1) {
-        if (xQueueReceive(xFila, &recieved, portMAX_DELAY))
+        if (xSemaphoreTake(xSemaforo, portMAX_DELAY))
         {
             HT_GPIO_WritePin(BLUE_LED_PIN, BLUE_LED_INSTANCE, LED_OFF);
             vTaskDelay(pdMS_TO_TICKS(500));
@@ -62,11 +63,20 @@ void Task2(void *pvParameters) {
 void main_entry(void) {
     HAL_USART_InitPrint(&huart1, GPR_UART1ClkSel_26M, uart_cntrl, 115200);
     
-    xFila = xQueueCreate(10, sizeof(bool));
+    // xFila = xQueueCreate(10, sizeof(bool));
 
-    if (xFila == NULL)
+    // if (xFila == NULL)
+    // {
+    //     printf("Erro ao criar fila\n");
+    //     while(1);
+    // }
+
+
+    xSemaforo = xSemaphoreCreateBinary();
+
+    if (xSemaforo == NULL)
     {
-        printf("Erro ao criar fila\n");
+        printf("Erro ao criar semaforo\n");
         while(1);
     }
 
